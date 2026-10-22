@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DNM Auto — Auction sold prices</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="lux-shell app-shell">
+  <div class="lux-backdrop" aria-hidden="true">
+    <img src="/resources/hero-luxury.jpg" alt="">
+  </div>
+
+  <header class="lux-header">
+    <nav class="lux-nav" aria-label="Primary">
+      <a href="/">Home</a>
+      <a href="/prices.html" aria-current="page">Sold prices</a>
+      <a href="/cost.html">Import cost</a>
+    </nav>
+    <a class="lux-logo" href="/" aria-label="DNM Auto home">
+      <img src="/resources/logo.png" alt="">
+    </a>
+    <div class="lux-header-right">
+      <p class="page-note">100 lots / page</p>
+      <a class="btn-pill btn-ghost-light" href="tel:+94713466099">Let's talk</a>
+    </div>
+  </header>
+  <nav class="lux-mobile-nav" aria-label="Pages">
+    <a href="/">Home</a>
+    <a href="/prices.html" aria-current="page">Sold prices</a>
+    <a href="/cost.html">Import cost</a>
+  </nav>
+
+  <main>
+    <form id="filters" class="panel">
+      <div class="panel-head">
+        <h1>Search</h1>
+        <p id="catalog-note">Loading makers…</p>
+      </div>
+
+      <!-- Auction date window (required by BeForward). Defaults to last ~3 months. -->
+      <input type="hidden" name="date_from" id="date_from">
+      <input type="hidden" name="date_to" id="date_to">
+
+      <label>
+        Maker
+        <select name="maker" id="maker">
+          <option value="-1">All makers</option>
+        </select>
+      </label>
+      <label>
+        Model
+        <select name="model" id="model">
+          <option value="-1">All models</option>
+        </select>
+      </label>
+      <label>
+        Model type
+        <input name="model_type" id="model_type" list="type-list" placeholder="KSP210">
+        <datalist id="type-list"></datalist>
+      </label>
+      <label>Grade <input name="grade" placeholder="G"></label>
+
+      <label>Year from <input name="year_from" inputmode="numeric" placeholder="2025"></label>
+      <label>Year to <input name="year_to" inputmode="numeric" placeholder="2026"></label>
+      <label>Mileage from, 000 km <input name="mileage_from" inputmode="numeric" placeholder="0"></label>
+      <label>Mileage to, 000 km <input name="mileage_to" inputmode="numeric" placeholder="50"></label>
+      <label>Displacement from, cc <input name="cc_from" inputmode="numeric" placeholder="1000"></label>
+      <label>Displacement to, cc <input name="cc_to" inputmode="numeric" placeholder="1500"></label>
+      <label>Sold from, 000 JPY <input name="price_from" inputmode="numeric" placeholder="500"></label>
+      <label>Sold to, 000 JPY <input name="price_to" inputmode="numeric" placeholder="2000"></label>
+
+      <label>
+        Result
+        <select name="result">
+          <option value="">Any</option>
+          <option value="1">Sold</option>
+          <option value="2">Not sold</option>
+        </select>
+      </label>
+      <label>
+        Score
+        <select name="score" id="score"></select>
+      </label>
+      <label>
+        Color
+        <select name="color" id="color"></select>
+      </label>
+      <label>
+        Transmission
+        <select name="transmission">
+          <option value="">Any</option>
+          <option value="AT">AT</option>
+          <option value="MT">MT</option>
+        </select>
+      </label>
+      <label>
+        Shift
+        <select name="shift">
+          <option value="">Any</option>
+          <option value="2WD">2WD</option>
+          <option value="4WD">4WD</option>
+        </select>
+      </label>
+      <label>Lot number <input name="lot" inputmode="numeric"></label>
+      <label>Chassis number <input name="chassis"></label>
+
+      <div class="actions">
+        <button type="submit" class="primary">Search</button>
+        <button type="button" id="reset" class="ghost">Reset</button>
+      </div>
+    </form>
+
+    <section class="results">
+      <div class="results-bar">
+        <p id="summary">Choose filters and search. Dates default to the last sample window.</p>
+        <div class="pager" id="pager"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Date</th>
+              <th>Lot</th>
+              <th>Auction</th>
+              <th>Maker</th>
+              <th>Model</th>
+              <th>Grade</th>
+              <th>Year</th>
+              <th>Mileage</th>
+              <th>cc</th>
+              <th>Trans</th>
+              <th>Color</th>
+              <th>Type</th>
+              <th>End, 000 JPY</th>
+              <th>Result</th>
+              <th>Score</th>
+              <th>Import</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="empty" hidden>No lots match these filters.</p>
+    </section>
+  </main>
+
+  <script src="/config.js"></script>
+  <script src="/nav-transition.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>
