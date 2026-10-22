@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(ROOT, "public");
-const HOST = "127.0.0.1";
+const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 4174);
 const PAGE = "https://beforward.aleado.com/stats/?p=project/findlots&s&ld";
 const PAGE_SIZE = 100;
@@ -431,5 +431,6 @@ if (!sessionCookie()) {
 }
 
 server.listen(PORT, HOST, () => {
-  console.log(`DNM Auto (Node) running at http://${HOST}:${PORT}`);
+  const shown = HOST === "0.0.0.0" ? "localhost" : HOST;
+  console.log(`DNM Auto (Node) running at http://${shown}:${PORT}`);
 });
