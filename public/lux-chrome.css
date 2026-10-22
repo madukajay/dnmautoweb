@@ -83,7 +83,7 @@ button { font: inherit; }
 
 /* ——— Shared header ——— */
 .lux-header {
-  position: fixed;
+  position: absolute;
   top: max(20px, env(safe-area-inset-top, 0px));
   left: 50%;
   margin-left: 0;
@@ -241,7 +241,7 @@ button { font: inherit; }
 
 body.lux-shell,
 body.home-page {
-  animation: pageFadeIn 0.45s ease both;
+  animation: pageFadeIn 0.45s ease;
 }
 body.is-leaving {
   animation: pageFadeOut 0.28s ease both;
@@ -279,7 +279,7 @@ body.is-leaving {
 
   .lux-mobile-nav {
     display: flex;
-    position: fixed;
+    position: absolute;
     top: 98px;
     left: 50%;
     transform: translateX(-50%);

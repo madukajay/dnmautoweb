@@ -1,5 +1,10 @@
 (function initNavTransitions() {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Back/forward can restore a page still marked as leaving, which stays invisible.
+  window.addEventListener("pageshow", () => {
+    document.body.classList.remove("is-leaving");
+  });
   const internal = (anchor) => {
     if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) return false;
     if (anchor.getAttribute("href")?.startsWith("mailto:") || anchor.getAttribute("href")?.startsWith("tel:")) {

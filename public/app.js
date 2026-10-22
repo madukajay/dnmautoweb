@@ -65,8 +65,150 @@
     if (event.target === lightbox) closeLightbox();
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && lightbox?.classList.contains("is-open")) closeLightbox();
+    if (event.key !== "Escape") return;
+    if (quoteLightbox?.classList.contains("is-open")) closeQuote();
+    else if (lightbox?.classList.contains("is-open")) closeLightbox();
   });
+
+  const quoteLightbox = document.querySelector("#quote-lightbox");
+  const quoteCard = quoteLightbox?.querySelector(".quote-lightbox-card");
+  const quoteClose = quoteLightbox?.querySelector(".quote-lightbox-close");
+
+  function openQuote(card) {
+    if (!quoteLightbox || !quoteCard) return;
+    const img = card.querySelector(".testimonial-avatar");
+    const quote = card.querySelector("blockquote p");
+    const name = card.querySelector("strong");
+    const model = card.querySelector(".testimonial-person span");
+    const shot = quoteCard.querySelector("img");
+    shot.src = img?.src || "";
+    shot.alt = img?.alt || "";
+    quoteCard.querySelector("p").textContent = quote?.textContent || "";
+    quoteCard.querySelector("strong").textContent = name?.textContent || "";
+    quoteCard.querySelector("span").textContent = model?.textContent || "";
+    quoteLightbox.hidden = false;
+    requestAnimationFrame(() => quoteLightbox.classList.add("is-open"));
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeQuote() {
+    if (!quoteLightbox) return;
+    quoteLightbox.classList.remove("is-open");
+    window.setTimeout(() => {
+      if (quoteLightbox.classList.contains("is-open")) return;
+      quoteLightbox.hidden = true;
+      if (!lightbox?.classList.contains("is-open")) document.body.style.overflow = "";
+    }, 280);
+  }
+
+  quoteClose?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeQuote();
+  });
+  quoteLightbox?.addEventListener("click", (event) => {
+    if (event.target === quoteLightbox) closeQuote();
+  });
+
+  const stage = document.querySelector(".testimonial-stage");
+  const viewport = document.querySelector("#testimonial-track");
+  const cards = [...document.querySelectorAll("#testimonial-track .testimonial-card")];
+  if (stage && viewport && cards.length > 2) {
+    let center = 1;
+    let busy = false;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const metrics = () => {
+      const gap = viewport.clientWidth < 720 ? 10 : 18;
+      const cardW = (viewport.clientWidth - gap * 2) / 3;
+      return { gap, cardW };
+    };
+
+    const pose = (slot, cardW, gap) => {
+      const scale = slot === 1 ? 1 : 0.94;
+      const y = slot === 1 ? 0 : 16;
+      const x = slot * (cardW + gap) + ((1 - scale) * cardW) / 2;
+      const visible = slot >= 0 && slot <= 2;
+      return {
+        transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`,
+        opacity: visible ? (slot === 1 ? "1" : "0.84") : "0",
+        zIndex: slot === 1 ? "3" : "1",
+        pointerEvents: visible ? "auto" : "none",
+      };
+    };
+
+    const apply = (card, slot, animate) => {
+      const { cardW, gap } = metrics();
+      const next = pose(slot, cardW, gap);
+      card.style.width = `${cardW}px`;
+      card.style.transition = animate && !reduced ? "" : "none";
+      card.style.transform = next.transform;
+      card.style.opacity = next.opacity;
+      card.style.zIndex = next.zIndex;
+      card.style.pointerEvents = next.pointerEvents;
+      card.classList.toggle("is-center", slot === 1);
+    };
+
+    const slotFor = (index) => {
+      const count = cards.length;
+      const left = (center - 1 + count) % count;
+      const right = (center + 1) % count;
+      if (index === left) return 0;
+      if (index === center) return 1;
+      if (index === right) return 2;
+      return null;
+    };
+
+    const layout = (animate, exit) => {
+      cards.forEach((card, index) => {
+        const slot = slotFor(index);
+        if (slot == null) {
+          if (exit && index === exit.index) apply(card, exit.slot, animate);
+          return;
+        }
+        apply(card, slot, animate);
+      });
+      stage.classList.add("is-ready");
+    };
+
+    const go = (dir) => {
+      if (busy) return;
+      busy = true;
+      const count = cards.length;
+      const outgoing = (center - dir + count) % count;
+      const incoming = (center + dir * 2 + count) % count;
+      apply(cards[incoming], dir === 1 ? 3 : -1, false);
+      void viewport.offsetWidth;
+      center = (center + dir + count) % count;
+      layout(true, { index: outgoing, slot: dir === 1 ? -1 : 3 });
+      window.setTimeout(() => {
+        busy = false;
+      }, reduced ? 0 : 640);
+    };
+
+    cards.forEach((card, index) => {
+      const slot = slotFor(index);
+      apply(card, slot == null ? 3 : slot, false);
+      card.addEventListener("click", (event) => {
+        if (event.target.closest(".testimonial-avatar-btn")) return;
+        openQuote(card);
+      });
+    });
+    requestAnimationFrame(() => {
+      cards.forEach((card) => {
+        card.style.transition = "";
+      });
+      stage.classList.add("is-ready");
+    });
+
+    stage.querySelector(".testimonial-prev")?.addEventListener("click", () => go(-1));
+    stage.querySelector(".testimonial-next")?.addEventListener("click", () => go(1));
+    window.addEventListener("resize", () => {
+      cards.forEach((card, index) => {
+        const slot = slotFor(index);
+        apply(card, slot == null ? 3 : slot, false);
+      });
+    });
+  }
 })();
 
 /* Sold-prices page */
