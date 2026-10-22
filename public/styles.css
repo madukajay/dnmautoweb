@@ -343,6 +343,7 @@ body.cost-page .sheet {
 }
 #lateResults {
   margin-top: 12px;
+  margin-bottom: 18px;
   grid-template-columns: 1fr;
 }
 .result-card {
