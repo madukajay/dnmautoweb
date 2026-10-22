@@ -22,7 +22,7 @@
   const play = document.querySelector(".play-btn");
   if (play) {
     play.addEventListener("click", () => {
-      window.location.href = "/prices.html";
+      window.location.href = "prices.html";
     });
   }
 
@@ -291,7 +291,7 @@
     if (lot.end_thousand_jpy != null) params.set("bid", String(lot.end_thousand_jpy * 1000));
     const cc = String(lot.displacement || "").replace(/[^\d]/g, "");
     if (cc) params.set("cc", cc);
-    return "/cost.html?" + params.toString();
+    return "cost.html?" + params.toString();
   }
 
   function cell(text, className) {

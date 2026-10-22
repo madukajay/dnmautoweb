@@ -1,4 +1,4 @@
-@import url("/lux-chrome.css");
+@import url("lux-chrome.css");
 
 body.lux-shell.app-shell {
   background: var(--bg);

@@ -1,6 +1,10 @@
 /* API base for Sold Prices queries.
- * Local: leave empty (same origin as node/python server).
- * GitHub Pages: set to your hosted API URL, e.g. "https://api.yourdomain.com"
- * Never put BeForward cookies or .env values here — they would be public.
+ * Localhost → same-origin Node/Python server.
+ * Live site → Render API.
+ * Never put BeForward cookies or .env values here.
  */
-window.DNM_API_BASE = window.DNM_API_BASE || "";
+(() => {
+  const host = location.hostname;
+  const local = host === "localhost" || host === "127.0.0.1";
+  window.DNM_API_BASE = local ? "" : "https://dnm-auto-api.onrender.com";
+})();
