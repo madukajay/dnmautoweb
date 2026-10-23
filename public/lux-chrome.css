@@ -353,6 +353,12 @@ html[data-theme="light"] .theme-toggle .theme-icon-sun { display: block; }
   border-color: rgba(255, 255, 255, 0.55);
 }
 
+.header-action svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
 .page-note {
   margin: 0;
   color: var(--muted);
@@ -393,13 +399,36 @@ body.is-leaving {
 
 @media (max-width: 960px) {
   .lux-header {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     top: max(12px, env(safe-area-inset-top, 0px));
+    width: min(1600px, calc(100% - 16px));
+    gap: 8px;
+    padding: 8px;
   }
   .lux-nav { display: none; }
   .lux-logo { justify-self: start; }
-  .lux-header-right { grid-column: 2; }
+  .lux-header-right { grid-column: 2; gap: 4px; min-width: 0; }
+  .lux-header-right > * { flex: none; }
   .lux-social { display: none; }
+  .lux-header .page-note { display: none; }
+  .lux-header .header-action {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0;
+    gap: 0;
+  }
+  .header-action-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
   .theme-toggle-label {
     position: absolute;
     width: 1px;
@@ -421,9 +450,9 @@ body.is-leaving {
   :root { --header-offset: 140px; }
 
   .lux-logo img {
-    height: 52px;
-    max-width: min(200px, 48vw);
-    padding: 4px 10px;
+    height: 40px;
+    max-width: min(132px, 34vw);
+    padding: 3px 8px;
   }
 
   .lux-mobile-nav {

@@ -22,9 +22,13 @@ function initials(username) {
   return (local.slice(0, 2) || "DN").toUpperCase();
 }
 
+const SIGN_IN_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>`;
+
 function renderSignedOut(slot) {
   const next = location.pathname.endsWith("cost.html") ? `cost.html${location.search}` : "cost.html";
-  if (slot) slot.innerHTML = `<a class="btn-pill btn-ghost-light" href="login.html?next=${encodeURIComponent(next)}">Sign in</a>`;
+  if (slot) {
+    slot.innerHTML = `<a class="btn-pill btn-ghost-light header-action" href="login.html?next=${encodeURIComponent(next)}" aria-label="Sign in">${SIGN_IN_ICON}<span class="header-action-label">Sign in</span></a>`;
+  }
   const menu = document.querySelector("[data-account-menu]");
   if (menu) menu.replaceChildren();
 }
@@ -34,12 +38,13 @@ function renderSignedIn(slot, username) {
   const menu = document.querySelector("[data-account-menu]");
   if (!menu) return;
   const at = String(username).indexOf("@");
+  const safeName = escapeHtml(username);
   const label = at > 0
     ? `${escapeHtml(username.slice(0, at))}<span class="account-domain">@${escapeHtml(username.slice(at + 1))}</span>`
-    : name;
+    : safeName;
   menu.innerHTML = `
     <div class="account-menu">
-      <button type="button" class="account-avatar" aria-haspopup="true" aria-label="Account menu for ${name}">${initials(username)}</button>
+      <button type="button" class="account-avatar" aria-haspopup="true" aria-label="Account menu for ${safeName}">${initials(username)}</button>
       <div class="account-pop">
         <strong>${label}</strong>
         <button type="button" data-sign-out>Sign out</button>

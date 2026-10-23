@@ -1070,6 +1070,7 @@ a.office-card:hover .office-cta {
   .hero-lux { padding: 110px 0 56px; }
   .hero-actions { flex-direction: column; align-items: stretch; }
   .btn-pill { width: 100%; }
+  .lux-header .btn-pill { width: auto; }
   .lux-social { display: none; }
   .section-light,
   .section-dark { padding: 64px 0; }
