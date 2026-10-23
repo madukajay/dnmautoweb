@@ -23,7 +23,7 @@
 
   document.addEventListener("click", (event) => {
     const anchor = event.target.closest("a[href]");
-    if (!internal(anchor)) return;
+    if (!internal(anchor) || anchor.closest(".lux-mobile-nav")) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     if (reduced) return;
 

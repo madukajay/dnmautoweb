@@ -436,7 +436,7 @@ body.lux-shell.login-page main {
   inset: 0;
   z-index: 80;
 }
-.user-drawer[hidden] { display: none; }
+.user-drawer[hidden] { display: none !important; }
 .user-drawer-backdrop {
   position: absolute;
   inset: 0;

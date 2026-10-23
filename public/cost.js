@@ -77,28 +77,28 @@ function createResultCard(title, value, isLKR = false) {
   card.className = "result-card";
   const titleEl = document.createElement("div");
   titleEl.className = "result-title";
-  titleEl.textContent = title;
+    titleEl.textContent = title;
   const valueEl = document.createElement("div");
   valueEl.className = "result-value";
   const formatted = Math.round(Number(value) || 0).toLocaleString("en-US");
   valueEl.classList.add(isLKR ? "result-value-lkr" : "result-value-lkr");
-  valueEl.innerHTML = `<span class="currency-symbol">LKR</span><span class="amount-num">${formatted}</span>`;
-  card.appendChild(titleEl);
-  card.appendChild(valueEl);
-  return card;
+        valueEl.innerHTML = `<span class="currency-symbol">LKR</span><span class="amount-num">${formatted}</span>`;
+    card.appendChild(titleEl);
+    card.appendChild(valueEl);
+    return card;
 }
 
 function updateVehicleInfo(vehicle, grade, yenRate) {
-  vehicleInfo.innerHTML = `
-    <div>
-      <span class="vehicle-model">${vehicle}</span>
+    vehicleInfo.innerHTML = `
+        <div>
+            <span class="vehicle-model">${vehicle}</span>
       <div class="vehicle-meta">Grade: <strong>${grade || "—"}</strong></div>
-    </div>
+        </div>
     <div class="vehicle-rate">
       <span class="vehicle-meta">JPY rate</span>
       <strong class="vehicle-shipping">${yenRate}</strong>
-    </div>
-  `;
+        </div>
+    `;
 }
 
 function normalizeGrade(value) {
@@ -220,8 +220,8 @@ async function calculateAndDisplay() {
   const data = await response.json();
   if (!response.ok) {
     totalPayableElement.textContent = data.detail || "Could not calculate.";
-    return;
-  }
+            return;
+        }
   renderQuote(data);
 }
 
@@ -292,12 +292,13 @@ function setUserDrawer(open) {
 }
 
 async function bootAdmin() {
-  const me = await authFetch(`${apiBase()}/api/auth/me`);
-  const session = await me.json();
-  if (!me.ok || session.role !== "admin") return;
   const opener = document.getElementById("open-users");
   const drawer = document.getElementById("user-drawer");
-  if (!opener || !drawer) return;
+  if (opener) opener.hidden = true;
+  if (drawer) drawer.hidden = true;
+  const me = await authFetch(`${apiBase()}/api/auth/me`);
+  const session = await me.json();
+  if (!me.ok || session.role !== "admin" || !opener || !drawer) return;
   opener.hidden = false;
   const response = await authFetch(`${apiBase()}/api/auth/users`);
   const data = await response.json();

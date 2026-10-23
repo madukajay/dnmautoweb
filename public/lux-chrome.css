@@ -358,6 +358,9 @@ html[data-theme="light"] .theme-toggle .theme-icon-sun { display: block; }
   height: 16px;
   flex: none;
 }
+#open-users[hidden] {
+  display: none !important;
+}
 
 .page-note {
   margin: 0;
@@ -447,7 +450,7 @@ body.is-leaving {
     justify-content: center;
   }
   .signed-in-user { max-width: 88px; }
-  :root { --header-offset: 140px; }
+  :root { --header-offset: 16px; }
 
   .lux-logo img {
     height: 40px;
@@ -455,14 +458,17 @@ body.is-leaving {
     padding: 3px 8px;
   }
 
-  .lux-mobile-nav {
+  .lux-shell > .lux-mobile-nav,
+  .home-page > .lux-mobile-nav {
     display: flex;
-    position: absolute;
-    top: 98px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 39;
-    width: min(1600px, calc(100% - 32px));
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    z-index: 40;
+    width: min(1600px, calc(100% - 16px));
+    margin: 78px auto 10px;
+    pointer-events: auto;
     gap: 6px;
     padding: 6px;
     border-radius: 14px;
@@ -472,6 +478,8 @@ body.is-leaving {
     -webkit-backdrop-filter: blur(10px);
   }
   .lux-mobile-nav a {
+    position: relative;
+    z-index: 1;
     flex: 1;
     text-align: center;
     padding: 10px 8px;
@@ -481,6 +489,7 @@ body.is-leaving {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.7);
+    pointer-events: auto;
   }
   .lux-mobile-nav a[aria-current="page"] {
     color: var(--white);
