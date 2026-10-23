@@ -6,9 +6,10 @@
  */
 
 import { createServer } from "node:http";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { catalog, quote, variantPreset } from "./cost-calc.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(ROOT, "public");
@@ -29,17 +30,135 @@ const TYPES = {
   ".webp": "image/webp",
 };
 
-function sessionCookie() {
-  let raw = (process.env.BEFORWARD_COOKIE || process.env.COOKIE || "").trim();
-  if (!raw) {
-    try {
-      raw = readFileSync(join(ROOT, ".env"), "utf8").trim();
-    } catch {
-      raw = "";
-    }
+const LOGIN_URL = "https://beforward.aleado.com/auth/login.php?cur_url=c3RhdHM/cD1wcm9qZWN0L2ZpbmRsb3RzJnMmbGQ=";
+const fileEnv = readDotEnv();
+let liveCookie = "";
+let refreshTask = null;
+
+function readDotEnv() {
+  const values = {};
+  let raw = "";
+  try {
+    raw = readFileSync(join(ROOT, ".env"), "utf8");
+  } catch {
+    return values;
   }
+  for (const line of raw.split(/\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) {
+      if (!values.BEFORWARD_COOKIE) values.BEFORWARD_COOKIE = trimmed.replace(/^cookie:\s*/i, "");
+      continue;
+    }
+    values[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+  }
+  return values;
+}
+
+function envValue(name) {
+  return (process.env[name] || fileEnv[name] || "").trim();
+}
+
+function sessionCookie() {
+  if (liveCookie) return liveCookie;
+  let raw = (process.env.BEFORWARD_COOKIE || process.env.COOKIE || fileEnv.BEFORWARD_COOKIE || "").trim();
   if (raw.toLowerCase().startsWith("cookie:")) raw = raw.split(":").slice(1).join(":").trim();
   return raw;
+}
+
+function persistCookie(cookie) {
+  liveCookie = cookie;
+  const path = join(ROOT, ".env");
+  if (!existsSync(path)) return;
+  const lines = readFileSync(path, "utf8").split(/\n/);
+  let found = false;
+  const next = lines.map((line) => {
+    if (!/^\s*BEFORWARD_COOKIE\s*=/.test(line)) return line;
+    found = true;
+    return `BEFORWARD_COOKIE=${cookie}`;
+  });
+  if (!found) next.unshift(`BEFORWARD_COOKIE=${cookie}`);
+  writeFileSync(path, `${next.join("\n").replace(/\n+$/, "")}\n`);
+}
+
+async function beforwardFetch(url, options) {
+  try {
+    return await fetch(url, { ...options, signal: AbortSignal.timeout(60000) });
+  } catch {
+    throw new Error("Could not reach BeForward to refresh the session.");
+  }
+}
+
+function absorbCookies(jar, response) {
+  const list = typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie() : [];
+  for (const item of list) {
+    const pair = item.split(";")[0];
+    const eq = pair.indexOf("=");
+    if (eq > 0) jar.set(pair.slice(0, eq).trim(), pair.slice(eq + 1).trim());
+  }
+}
+
+function cookieHeader(jar) {
+  return [...jar].map(([key, value]) => `${key}=${value}`).join("; ");
+}
+
+async function loginBeForward() {
+  const username = envValue("BEFORWARD_USER");
+  const password = envValue("BEFORWARD_PASSWORD");
+  if (!username || !password) throw new Error("BeForward username and password are not set.");
+  const jar = new Map();
+  let response = await beforwardFetch(LOGIN_URL, {
+    redirect: "manual",
+    headers: { "User-Agent": "Mozilla/5.0" },
+  });
+  absorbCookies(jar, response);
+  const landed = response.headers.get("location") || LOGIN_URL;
+  if (response.status >= 300 && response.status < 400) {
+    response = await beforwardFetch(landed, {
+      redirect: "manual",
+      headers: { "User-Agent": "Mozilla/5.0", Cookie: cookieHeader(jar) },
+    });
+    absorbCookies(jar, response);
+  }
+  response = await beforwardFetch(landed, {
+    method: "POST",
+    redirect: "manual",
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: cookieHeader(jar),
+      Referer: landed,
+    },
+    body: new URLSearchParams({ username, password, Submit: "Sign In" }),
+  });
+  absorbCookies(jar, response);
+  let location = response.status >= 300 && response.status < 400 ? response.headers.get("location") : "";
+  let page = "";
+  for (let hop = 0; hop < 4 && location; hop += 1) {
+    const next = new URL(location, "https://beforward.aleado.com").href;
+    response = await beforwardFetch(next, {
+      redirect: "manual",
+      headers: { "User-Agent": "Mozilla/5.0", Cookie: cookieHeader(jar) },
+    });
+    absorbCookies(jar, response);
+    location = response.status >= 300 && response.status < 400 ? response.headers.get("location") : "";
+    if (!location) page = await response.text();
+  }
+  if (!jar.has("SU_Session") || /name="password"/i.test(page)) {
+    throw new Error("BeForward login failed. Check the username and password on the server.");
+  }
+  persistCookie(cookieHeader(jar));
+  console.log("BeForward session refreshed.");
+}
+
+function refreshSession() {
+  if (!refreshTask) {
+    refreshTask = loginBeForward().finally(() => {
+      refreshTask = null;
+    });
+  }
+  return refreshTask;
 }
 
 function memberWall(body) {
@@ -66,7 +185,7 @@ async function aleado(url, body) {
   }
 }
 
-async function sajax(func, args) {
+async function sajax(func, args, allowRefresh = true) {
   const parts = [
     "p=project/findlots",
     "s",
@@ -78,7 +197,13 @@ async function sajax(func, args) {
   ];
   const [status, body] = await aleado(`https://beforward.aleado.com/stats/?${parts.join("&")}`);
   if (status !== 200) return [status, body];
-  if (memberWall(body)) return [401, body];
+  if (memberWall(body)) {
+    if (allowRefresh && envValue("BEFORWARD_USER")) {
+      await refreshSession();
+      return sajax(func, args, false);
+    }
+    return [401, body];
+  }
   if (body.startsWith("-")) return [502, body.slice(2)];
   return [200, body];
 }
@@ -305,7 +430,11 @@ async function search(data) {
   for (const [key, value] of Object.entries(fields)) params.append(key, value);
   if (formValue(data, "score")) params.append("score[]", formValue(data, "score"));
   if (formValue(data, "color")) params.append("color[]", formValue(data, "color"));
-  const [status, body] = await aleado(PAGE, params.toString());
+  let [status, body] = await aleado(PAGE, params.toString());
+  if (status === 200 && memberWall(body) && envValue("BEFORWARD_USER")) {
+    await refreshSession();
+    [status, body] = await aleado(PAGE, params.toString());
+  }
   if (status !== 200) return [status, { detail: "BeForward did not return the results page." }];
   const [code, payload] = parseLots(body);
   if (code === 200) {
@@ -403,6 +532,34 @@ const server = createServer(async (request, response) => {
       sendJson(response, status, data);
       return;
     }
+    if (request.method === "GET" && path === "/api/cost/catalog") {
+      sendJson(response, 200, { vehicles: catalog() });
+      return;
+    }
+    if (request.method === "GET" && path === "/api/cost/variant") {
+      const vehicle = url.searchParams.get("vehicle") || "";
+      const index = url.searchParams.get("index") || "0";
+      const preset = variantPreset(vehicle, index);
+      if (!preset) return sendJson(response, 404, { detail: "Unknown vehicle." });
+      sendJson(response, 200, preset);
+      return;
+    }
+    if (request.method === "POST" && path === "/api/cost") {
+      let data;
+      try {
+        data = JSON.parse((await readBody(request)) || "{}");
+      } catch {
+        return sendJson(response, 400, { detail: "Expected JSON." });
+      }
+      try {
+        const result = quote(data);
+        if (result.error) return sendJson(response, 400, { detail: result.error });
+        sendJson(response, 200, result);
+      } catch (error) {
+        sendJson(response, 400, { detail: error.message });
+      }
+      return;
+    }
     if (request.method === "POST" && path === "/api/lots") {
       let data;
       try {
@@ -425,12 +582,25 @@ const server = createServer(async (request, response) => {
   }
 });
 
-if (!sessionCookie()) {
-  console.error("Put the BeForward cookie in .env");
+const hasLogin = Boolean(envValue("BEFORWARD_USER") && envValue("BEFORWARD_PASSWORD"));
+if (!sessionCookie() && !hasLogin) {
+  console.error("Set BEFORWARD_USER and BEFORWARD_PASSWORD, or a BeForward cookie.");
   process.exit(1);
 }
 
-server.listen(PORT, HOST, () => {
-  const shown = HOST === "0.0.0.0" ? "localhost" : HOST;
-  console.log(`DNM Auto (Node) running at http://${shown}:${PORT}`);
-});
+async function boot() {
+  if (hasLogin) {
+    try {
+      await refreshSession();
+    } catch (error) {
+      console.error(error.message);
+      if (!sessionCookie()) process.exit(1);
+    }
+  }
+  server.listen(PORT, HOST, () => {
+    const shown = HOST === "0.0.0.0" ? "localhost" : HOST;
+    console.log(`DNM Auto (Node) running at http://${shown}:${PORT}`);
+  });
+}
+
+boot();
