@@ -1,0 +1,246 @@
+/* Light theme. Dark mode is the default in lux-chrome.css. */
+html[data-theme="light"] {
+  --bg: #f4f5f8;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-soft: #eef1f5;
+  --paper: #ffffff;
+  --ink: #14161c;
+  --muted: #5c6674;
+  --muted-dark: #5c6674;
+  --line: rgba(16, 18, 24, 0.1);
+  --line-strong: rgba(16, 18, 24, 0.16);
+  --line-dark: rgba(16, 18, 24, 0.08);
+  --shadow-pop: 0 12px 30px rgba(16, 18, 24, 0.08);
+  color-scheme: light;
+}
+
+html[data-theme="light"] body.lux-shell,
+html[data-theme="light"] body.home-page {
+  color: #17191f;
+  background: #f4f5f8;
+}
+
+html[data-theme="light"] .lux-header,
+html[data-theme="light"] .lux-mobile-nav {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(16, 18, 24, 0.08);
+  box-shadow: 0 10px 30px rgba(16, 18, 24, 0.08);
+}
+
+html[data-theme="light"] .lux-nav a,
+html[data-theme="light"] .lux-mobile-nav a {
+  color: rgba(23, 25, 31, 0.62);
+}
+html[data-theme="light"] .lux-nav a:hover,
+html[data-theme="light"] .lux-nav a[aria-current="page"],
+html[data-theme="light"] .lux-mobile-nav a[aria-current="page"] {
+  color: #17191f;
+}
+html[data-theme="light"] .lux-nav a[aria-current="page"] {
+  border-bottom-color: rgba(23, 25, 31, 0.45);
+}
+html[data-theme="light"] .lux-mobile-nav a[aria-current="page"] {
+  background: rgba(16, 18, 24, 0.06);
+}
+
+html[data-theme="light"] .lux-social a {
+  background: rgba(16, 18, 24, 0.04);
+  border-color: rgba(16, 18, 24, 0.1);
+  color: #17191f;
+}
+html[data-theme="light"] .lux-social a:hover {
+  background: rgba(16, 18, 24, 0.08);
+}
+
+html[data-theme="light"] .lux-header .btn-ghost-light,
+html[data-theme="light"] .theme-toggle {
+  color: #17191f;
+  border-color: rgba(16, 18, 24, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+}
+html[data-theme="light"] .lux-header .btn-ghost-light:hover,
+html[data-theme="light"] .theme-toggle:hover {
+  background: #fff;
+  border-color: rgba(16, 18, 24, 0.28);
+}
+
+html[data-theme="light"] .lux-backdrop img {
+  opacity: 0.16;
+  filter: saturate(0.75) brightness(1.2);
+}
+html[data-theme="light"] .lux-backdrop::after {
+  background:
+    linear-gradient(180deg, rgba(244, 245, 248, 0.78) 0%, rgba(244, 245, 248, 0.9) 42%, #f4f5f8 100%),
+    radial-gradient(ellipse 55% 40% at 75% 15%, rgba(180, 40, 80, 0.08), transparent 70%);
+}
+
+html[data-theme="light"] .hero-lux,
+html[data-theme="light"] .hero-lux h1,
+html[data-theme="light"] .hero-brand,
+html[data-theme="light"] .hero-sub {
+  color: #fff;
+}
+html[data-theme="light"] .hero-lede,
+html[data-theme="light"] .pill-badge {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+html[data-theme="light"] .section-dark,
+html[data-theme="light"] .testimonials {
+  background: #f4f5f8;
+  color: #17191f;
+}
+html[data-theme="light"] .section-head.light h2,
+html[data-theme="light"] .testimonial-head h2,
+html[data-theme="light"] .testimonial-person strong,
+html[data-theme="light"] .eyebrow.light {
+  color: #17191f;
+}
+
+html[data-theme="light"] .office-card,
+html[data-theme="light"] .testimonial-card {
+  background: #fff;
+  border-color: rgba(16, 18, 24, 0.08);
+  box-shadow: 0 16px 36px rgba(16, 18, 24, 0.08);
+  color: #17191f;
+}
+html[data-theme="light"] .office-card:hover,
+html[data-theme="light"] .testimonial-card.is-center {
+  border-color: rgba(16, 18, 24, 0.16);
+  box-shadow: 0 18px 40px rgba(16, 18, 24, 0.12);
+}
+html[data-theme="light"] .office-mark,
+html[data-theme="light"] .office-copy a,
+html[data-theme="light"] .office-cta,
+html[data-theme="light"] a.office-card:hover .office-cta,
+html[data-theme="light"] .testimonial-card blockquote p {
+  color: #17191f;
+}
+html[data-theme="light"] .office-copy p,
+html[data-theme="light"] .testimonial-person span {
+  color: #5c6674;
+}
+html[data-theme="light"] .testimonial-pill,
+html[data-theme="light"] .testimonial-arrow {
+  color: #17191f;
+  border-color: rgba(16, 18, 24, 0.14);
+  background: #fff;
+}
+html[data-theme="light"] .testimonial-arrow:hover {
+  background: #f4f5f8;
+  border-color: rgba(16, 18, 24, 0.24);
+}
+
+html[data-theme="light"] .cta-finale {
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 20%, rgba(180, 50, 90, 0.12), transparent 70%),
+    linear-gradient(180deg, #f4f5f8 0%, #f8f1f4 100%);
+  border-top-color: rgba(16, 18, 24, 0.06);
+  color: #17191f;
+}
+html[data-theme="light"] .finale-links,
+html[data-theme="light"] .finale-links a:hover,
+html[data-theme="light"] .brand-wordmark {
+  color: #17191f;
+}
+html[data-theme="light"] .cta-finale .btn-primary-glow {
+  background: #14161c;
+  color: #fff;
+}
+
+html[data-theme="light"] .lux-footer {
+  background: #fff;
+  border-top-color: rgba(16, 18, 24, 0.08);
+  color: #5c6674;
+}
+
+html[data-theme="light"] .quote-lightbox-card {
+  background: #fff;
+  border-color: rgba(16, 18, 24, 0.1);
+  color: #17191f;
+}
+html[data-theme="light"] .quote-lightbox-card p,
+html[data-theme="light"] .quote-lightbox-card strong {
+  color: #17191f;
+}
+html[data-theme="light"] .photo-lightbox-close {
+  color: #17191f;
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(16, 18, 24, 0.12);
+}
+
+html[data-theme="light"] .panel,
+html[data-theme="light"] .results,
+html[data-theme="light"] .sheet {
+  background: rgba(255, 255, 255, 0.9);
+  border-top-color: rgba(16, 18, 24, 0.08);
+  box-shadow: 0 16px 36px rgba(16, 18, 24, 0.08);
+}
+html[data-theme="light"] .panel-head h1,
+html[data-theme="light"] .sheet h2,
+html[data-theme="light"] .sheet h3,
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] .ghost,
+html[data-theme="light"] .vehicle-model,
+html[data-theme="light"] .vehicle-meta strong,
+html[data-theme="light"] .result-value,
+html[data-theme="light"] .tax-amount,
+html[data-theme="light"] td,
+html[data-theme="light"] .results-bar p {
+  color: #17191f;
+}
+html[data-theme="light"] input,
+html[data-theme="light"] select {
+  background: #fff;
+}
+html[data-theme="light"] select option {
+  background: #fff;
+  color: #17191f;
+}
+html[data-theme="light"] input::placeholder {
+  color: rgba(92, 102, 116, 0.8);
+}
+html[data-theme="light"] .ghost {
+  background: rgba(16, 18, 24, 0.03);
+  border-color: rgba(16, 18, 24, 0.16);
+}
+html[data-theme="light"] .ghost:hover {
+  background: rgba(16, 18, 24, 0.06);
+}
+html[data-theme="light"] th {
+  background: rgba(255, 255, 255, 0.96);
+}
+html[data-theme="light"] th,
+html[data-theme="light"] td {
+  border-bottom-color: rgba(16, 18, 24, 0.06);
+}
+html[data-theme="light"] tbody tr:hover {
+  background: rgba(16, 18, 24, 0.03);
+}
+html[data-theme="light"] .thumb {
+  background: #e7eaef;
+}
+html[data-theme="light"] .placeholder {
+  background: rgba(16, 18, 24, 0.06);
+}
+html[data-theme="light"] .result-card,
+html[data-theme="light"] .tax-block,
+html[data-theme="light"] .tax-item-total {
+  background: #f7f8fb;
+}
+html[data-theme="light"] .tax-item {
+  border-bottom-color: rgba(16, 18, 24, 0.06);
+}
+html[data-theme="light"] .vehicle-shipping,
+html[data-theme="light"] .result-value-jpy,
+html[data-theme="light"] .tax-item-agent .tax-name,
+html[data-theme="light"] .tax-item-agent .tax-amount {
+  color: #9a3d5c;
+}
+html[data-theme="light"] .vehicle-info,
+html[data-theme="light"] .tax-item-agent {
+  background: rgba(154, 61, 92, 0.08);
+  border-color: rgba(154, 61, 92, 0.2);
+}
