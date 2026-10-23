@@ -1052,15 +1052,22 @@ a.office-card:hover .office-cta {
 }
 
 @media (max-width: 720px) {
-  .testimonial-viewport { height: 340px; }
-  .testimonial-card { height: 292px; padding: 14px 10px; }
-  .testimonial-person {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+  .testimonial-viewport { height: 320px; }
+  .testimonial-card {
+    height: 280px;
+    top: 12px;
+    padding: 20px 18px 16px;
+    gap: 14px;
   }
-  .testimonial-avatar { width: 44px; height: 44px; }
-  .testimonial-card blockquote p { font-size: 12px; line-height: 1.4; -webkit-line-clamp: 5; line-clamp: 5; }
+  .testimonial-person {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .testimonial-avatar { width: 64px; height: 64px; }
+  .testimonial-person strong { font-size: 15px; }
+  .testimonial-stars { font-size: 13px; }
+  .testimonial-card blockquote p { font-size: 15px; line-height: 1.5; -webkit-line-clamp: 4; line-clamp: 4; }
   .quote-lightbox-card { grid-template-columns: 1fr; }
   .quote-lightbox-card img { width: 120px; height: 120px; }
 }

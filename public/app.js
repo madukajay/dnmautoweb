@@ -116,14 +116,27 @@
     let center = 1;
     let busy = false;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const phoneQuery = window.matchMedia("(max-width: 720px)");
 
     const metrics = () => {
-      const gap = viewport.clientWidth < 720 ? 10 : 18;
+      if (phoneQuery.matches) {
+        return { gap: 16, cardW: viewport.clientWidth, single: true };
+      }
+      const gap = 18;
       const cardW = (viewport.clientWidth - gap * 2) / 3;
-      return { gap, cardW };
+      return { gap, cardW, single: false };
     };
 
-    const pose = (slot, cardW, gap) => {
+    const pose = (slot, cardW, gap, single) => {
+      if (single) {
+        const visible = slot === 1;
+        return {
+          transform: `translate3d(${(slot - 1) * (cardW + gap)}px, 0, 0)`,
+          opacity: visible ? "1" : "0",
+          zIndex: visible ? "3" : "1",
+          pointerEvents: visible ? "auto" : "none",
+        };
+      }
       const scale = slot === 1 ? 1 : 0.94;
       const y = slot === 1 ? 0 : 16;
       const x = slot * (cardW + gap) + ((1 - scale) * cardW) / 2;
@@ -137,8 +150,8 @@
     };
 
     const apply = (card, slot, animate) => {
-      const { cardW, gap } = metrics();
-      const next = pose(slot, cardW, gap);
+      const { cardW, gap, single } = metrics();
+      const next = pose(slot, cardW, gap, single);
       card.style.width = `${cardW}px`;
       card.style.transition = animate && !reduced ? "" : "none";
       card.style.transform = next.transform;
@@ -202,12 +215,14 @@
 
     stage.querySelector(".testimonial-prev")?.addEventListener("click", () => go(-1));
     stage.querySelector(".testimonial-next")?.addEventListener("click", () => go(1));
-    window.addEventListener("resize", () => {
+    const relayout = () => {
       cards.forEach((card, index) => {
         const slot = slotFor(index);
         apply(card, slot == null ? 3 : slot, false);
       });
-    });
+    };
+    window.addEventListener("resize", relayout);
+    phoneQuery.addEventListener("change", relayout);
   }
 })();
 
