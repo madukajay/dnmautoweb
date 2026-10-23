@@ -96,6 +96,24 @@
   animation: fadeInUp 0.9s ease both;
 }
 
+@media (min-width: 961px) {
+  .hero-lux {
+    align-items: center;
+    padding: 0;
+  }
+  .hero-lux-content,
+  .hero-sub,
+  .hero-lede {
+    text-align: center;
+  }
+  .hero-sub,
+  .hero-lede {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-actions { justify-content: center; }
+}
+
 .hero-brand {
   margin: 0 0 10px;
   font-family: var(--font-display);
@@ -1074,7 +1092,7 @@ a.office-card:hover .office-cta {
 
 @media (max-width: 640px) {
   .wrap { width: calc(100% - 32px); }
-  .hero-lux { padding: 110px 0 56px; }
+  .hero-lux { padding: 8px 0 56px; }
   .hero-actions { flex-direction: column; align-items: stretch; }
   .btn-pill { width: 100%; }
   .lux-header .btn-pill { width: auto; }
