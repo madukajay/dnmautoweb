@@ -5,6 +5,7 @@
  * Python stays on 4173; this listens on 4174.
  */
 
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, resolve, sep } from "node:path";
@@ -13,6 +14,7 @@ import { catalog, quote, variantPreset } from "./cost-calc.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(ROOT, "public");
+const USERS_PATH = join(ROOT, "users.json");
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = Number(process.env.PORT || 4174);
 const PAGE = "https://beforward.aleado.com/stats/?p=project/findlots&s&ld";
@@ -449,8 +451,8 @@ function corsHeaders() {
   const origin = process.env.CORS_ORIGIN || "*";
   return {
     "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 }
 
@@ -501,6 +503,102 @@ function readBody(request) {
   });
 }
 
+function authSecret() {
+  return envValue("AUTH_SECRET") || envValue("ADMIN_PASSWORD") || envValue("BEFORWARD_PASSWORD");
+}
+
+function adminIdentity() {
+  return {
+    username: (envValue("ADMIN_USER") || envValue("BEFORWARD_USER")).toLowerCase(),
+    password: envValue("ADMIN_PASSWORD") || envValue("BEFORWARD_PASSWORD"),
+  };
+}
+
+function sameSecret(left, right) {
+  const a = Buffer.from(String(left));
+  const b = Buffer.from(String(right));
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+function readUsers() {
+  try {
+    const data = JSON.parse(readFileSync(USERS_PATH, "utf8"));
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeUsers(users) {
+  writeFileSync(USERS_PATH, `${JSON.stringify(users, null, 2)}\n`);
+}
+
+function hashPassword(password) {
+  const salt = randomBytes(16).toString("base64url");
+  const hash = scryptSync(password, salt, 32).toString("base64url");
+  return `${salt}:${hash}`;
+}
+
+function checkPassword(password, stored) {
+  const [salt, hash] = String(stored || "").split(":");
+  if (!salt || !hash) return false;
+  const actual = scryptSync(password, salt, 32);
+  const expected = Buffer.from(hash, "base64url");
+  if (actual.length !== expected.length) return false;
+  return timingSafeEqual(actual, expected);
+}
+
+function signToken(username, role) {
+  const payload = Buffer.from(JSON.stringify({
+    u: username,
+    role,
+    exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
+  })).toString("base64url");
+  const sig = createHmac("sha256", authSecret()).update(payload).digest("base64url");
+  return `${payload}.${sig}`;
+}
+
+function readSession(request) {
+  const header = request.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  const dot = token.indexOf(".");
+  if (dot <= 0) return null;
+  const payload = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  const expected = createHmac("sha256", authSecret()).update(payload).digest("base64url");
+  if (!sameSecret(sig, expected)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!data?.u || !data.exp || data.exp < Date.now()) return null;
+    return { username: String(data.u), role: data.role === "admin" ? "admin" : "user" };
+  } catch {
+    return null;
+  }
+}
+
+function requireUser(request, response) {
+  const session = readSession(request);
+  if (!session) {
+    sendJson(response, 401, { detail: "Sign in to view import costs." });
+    return null;
+  }
+  return session;
+}
+
+function authenticate(username, password) {
+  const name = String(username || "").trim();
+  const pass = String(password || "");
+  if (!name || !pass) return null;
+  const admin = adminIdentity();
+  if (name.toLowerCase() === admin.username && sameSecret(pass, admin.password)) {
+    return { username: name, role: "admin" };
+  }
+  const user = readUsers().find((item) => String(item.username || "").toLowerCase() === name.toLowerCase());
+  if (user && checkPassword(pass, user.password)) return { username: user.username, role: "user" };
+  return null;
+}
+
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, `http://${HOST}:${PORT}`);
   const path = url.pathname.replace(/\/$/, "") || "/";
@@ -532,11 +630,83 @@ const server = createServer(async (request, response) => {
       sendJson(response, status, data);
       return;
     }
+    if (request.method === "POST" && path === "/api/auth/login") {
+      let data;
+      try {
+        data = JSON.parse((await readBody(request)) || "{}");
+      } catch {
+        return sendJson(response, 400, { detail: "Expected JSON." });
+      }
+      const account = authenticate(data.username, data.password);
+      if (!account) return sendJson(response, 401, { detail: "Those details do not match an account." });
+      sendJson(response, 200, {
+        token: signToken(account.username, account.role),
+        username: account.username,
+        role: account.role,
+      });
+      return;
+    }
+    if (request.method === "GET" && path === "/api/auth/me") {
+      const session = requireUser(request, response);
+      if (!session) return;
+      sendJson(response, 200, session);
+      return;
+    }
+    if (request.method === "GET" && path === "/api/auth/users") {
+      const session = requireUser(request, response);
+      if (!session) return;
+      if (session.role !== "admin") return sendJson(response, 403, { detail: "Only the owner can manage users." });
+      sendJson(response, 200, { users: readUsers().map((item) => item.username) });
+      return;
+    }
+    if (request.method === "POST" && path === "/api/auth/users") {
+      const session = requireUser(request, response);
+      if (!session) return;
+      if (session.role !== "admin") return sendJson(response, 403, { detail: "Only the owner can manage users." });
+      let data;
+      try {
+        data = JSON.parse((await readBody(request)) || "{}");
+      } catch {
+        return sendJson(response, 400, { detail: "Expected JSON." });
+      }
+      const username = String(data.username || "").trim();
+      const password = String(data.password || "");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username) && !/^[A-Za-z0-9._-]{3,64}$/.test(username)) {
+        return sendJson(response, 400, { detail: "Use an email or a username of at least 3 letters." });
+      }
+      if (password.length < 8) return sendJson(response, 400, { detail: "Password must be at least 8 characters." });
+      if (username.toLowerCase() === adminIdentity().username) {
+        return sendJson(response, 400, { detail: "That account already exists." });
+      }
+      const users = readUsers().filter((item) => item.username.toLowerCase() !== username.toLowerCase());
+      users.push({ username, password: hashPassword(password) });
+      writeUsers(users);
+      sendJson(response, 200, { users: users.map((item) => item.username) });
+      return;
+    }
+    if (request.method === "DELETE" && path === "/api/auth/users") {
+      const session = requireUser(request, response);
+      if (!session) return;
+      if (session.role !== "admin") return sendJson(response, 403, { detail: "Only the owner can manage users." });
+      let data;
+      try {
+        data = JSON.parse((await readBody(request)) || "{}");
+      } catch {
+        return sendJson(response, 400, { detail: "Expected JSON." });
+      }
+      const username = String(data.username || "").trim().toLowerCase();
+      const users = readUsers().filter((item) => item.username.toLowerCase() !== username);
+      writeUsers(users);
+      sendJson(response, 200, { users: users.map((item) => item.username) });
+      return;
+    }
     if (request.method === "GET" && path === "/api/cost/catalog") {
+      if (!requireUser(request, response)) return;
       sendJson(response, 200, { vehicles: catalog() });
       return;
     }
     if (request.method === "GET" && path === "/api/cost/variant") {
+      if (!requireUser(request, response)) return;
       const vehicle = url.searchParams.get("vehicle") || "";
       const index = url.searchParams.get("index") || "0";
       const preset = variantPreset(vehicle, index);
@@ -545,6 +715,7 @@ const server = createServer(async (request, response) => {
       return;
     }
     if (request.method === "POST" && path === "/api/cost") {
+      if (!requireUser(request, response)) return;
       let data;
       try {
         data = JSON.parse((await readBody(request)) || "{}");

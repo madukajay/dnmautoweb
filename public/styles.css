@@ -424,6 +424,83 @@ body.cost-page .sheet {
     0 0 28px rgba(180, 50, 100, 0.3);
 }
 
+body.lux-shell.login-page main {
+  grid-template-columns: minmax(280px, 440px);
+  justify-content: center;
+}
+.login-card { padding: 28px 24px; }
+.login-note { min-height: 1.2em; margin-top: 12px; color: #f0a8a0; }
+.login-call { margin-top: 8px; align-self: flex-start; }
+.user-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.user-drawer[hidden] { display: none; }
+.user-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  height: 100%;
+  border-radius: 0;
+  background: rgba(6, 7, 10, 0.62);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.28s ease;
+}
+.user-drawer.is-open .user-drawer-backdrop { opacity: 1; }
+.user-drawer-backdrop:hover,
+.user-drawer-close:hover { transform: none; }
+.user-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 100%);
+  height: 100%;
+  padding: 28px 22px 32px;
+  overflow: auto;
+  background: rgba(18, 20, 26, 0.96);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -18px 0 40px rgba(0, 0, 0, 0.35);
+  transform: translateX(100%);
+  transition: transform 0.34s cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+.user-drawer.is-open .user-drawer-panel { transform: translateX(0); }
+.user-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.user-drawer-head h2 { margin: 0 0 6px; }
+.user-drawer-close {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--white);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.user-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.user-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.user-list button { height: 34px; }
+
 @media (max-width: 900px) {
   body.cost-page main.cost-layout { grid-template-columns: 1fr; }
   .sheet { height: auto; }

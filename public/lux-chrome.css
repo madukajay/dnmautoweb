@@ -153,6 +153,107 @@ button { font: inherit; }
   gap: 12px;
 }
 
+[data-auth-slot] {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.signed-in-user {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+.account-menu { position: relative; }
+.account-avatar {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #14161c;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35), 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+.account-avatar:hover,
+.account-pop button:hover { transform: none; }
+.account-menu::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 220px;
+  height: 14px;
+}
+.account-pop {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: 220px;
+  padding: 16px 16px 8px;
+  border-radius: 18px;
+  background: #fff;
+  color: #14161c;
+  text-align: center;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+}
+.account-menu:hover .account-pop,
+.account-menu:focus-within .account-pop,
+.account-menu.is-open .account-pop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.account-pop strong {
+  display: block;
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.account-domain {
+  display: block;
+  margin-top: 2px;
+  color: #5c6674;
+  font-size: 13px;
+  font-weight: 650;
+}
+.account-pop button {
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  height: auto;
+  padding: 12px 16px;
+  border: 0;
+  border-top: 1px solid rgba(16, 18, 24, 0.08);
+  border-radius: 0 0 18px 18px;
+  background: transparent;
+  color: #14161c;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.account-pop button:hover { background: #f4f5f8; }
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -316,6 +417,7 @@ body.is-leaving {
     padding: 0;
     justify-content: center;
   }
+  .signed-in-user { max-width: 88px; }
   :root { --header-offset: 140px; }
 
   .lux-logo img {

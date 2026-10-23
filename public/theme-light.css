@@ -239,6 +239,26 @@ html[data-theme="light"] .tax-item-agent .tax-name,
 html[data-theme="light"] .tax-item-agent .tax-amount {
   color: #9a3d5c;
 }
+html[data-theme="light"] .login-note { color: #9a3d5c; }
+html[data-theme="light"] .account-avatar {
+  background: #14161c;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(16, 18, 24, 0.16);
+}
+html[data-theme="light"] .account-pop {
+  border: 1px solid rgba(16, 18, 24, 0.08);
+  box-shadow: 0 18px 40px rgba(16, 18, 24, 0.12);
+}
+html[data-theme="light"] .signed-in-user { color: #5c6674; }
+html[data-theme="light"] .user-drawer-panel {
+  background: #fff;
+  border-left-color: rgba(16, 18, 24, 0.08);
+  color: #17191f;
+}
+html[data-theme="light"] .user-drawer-close {
+  color: #17191f;
+  border-color: rgba(16, 18, 24, 0.14);
+}
 html[data-theme="light"] .vehicle-info,
 html[data-theme="light"] .tax-item-agent {
   background: rgba(154, 61, 92, 0.08);

@@ -23,6 +23,31 @@ const exporterSelect = document.getElementById("exporter");
 const capacityInput = document.getElementById("capacity");
 
 const apiBase = () => String(window.DNM_API_BASE || "").replace(/\/$/, "");
+
+function authHeaders(extra = {}) {
+  const headers = { ...extra };
+  try {
+    const token = localStorage.getItem("dnm-auth");
+    if (token) headers.Authorization = `Bearer ${token}`;
+  } catch {
+    /* storage can be blocked */
+  }
+  return headers;
+}
+
+function sendToLogin() {
+  const next = `cost.html${window.location.search}`;
+  window.location.replace(`login.html?next=${encodeURIComponent(next)}`);
+}
+
+async function authFetch(url, options = {}) {
+  const response = await fetch(url, { ...options, headers: authHeaders(options.headers || {}) });
+  if (response.status === 401) {
+    try { localStorage.removeItem("dnm-auth"); } catch { /* ignore */ }
+    sendToLogin();
+  }
+  return response;
+}
 let catalogVehicles = {};
 let calcTimer = 0;
 
@@ -125,7 +150,7 @@ function fillGrades() {
 
 async function loadVariant(index) {
   const vehicle = vehicleSelect.value;
-  const response = await fetch(
+  const response = await authFetch(
     `${apiBase()}/api/cost/variant?vehicle=${encodeURIComponent(vehicle)}&index=${encodeURIComponent(index)}`,
   );
   const data = await response.json();
@@ -187,7 +212,7 @@ function renderQuote(data) {
 }
 
 async function calculateAndDisplay() {
-  const response = await fetch(`${apiBase()}/api/cost`, {
+  const response = await authFetch(`${apiBase()}/api/cost`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload()),
@@ -219,8 +244,99 @@ function updateSurchargeToggleLabel() {
   surchargeToggleState.textContent = surchargeToggle?.checked ? "On" : "Off";
 }
 
+function renderUserList(names) {
+  const list = document.getElementById("user-list");
+  if (!list) return;
+  list.replaceChildren();
+  if (!names.length) {
+    const empty = document.createElement("li");
+    empty.className = "fine";
+    empty.textContent = "No customers yet.";
+    list.appendChild(empty);
+    return;
+  }
+  for (const name of names) {
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "ghost";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", async () => {
+      const response = await authFetch(`${apiBase()}/api/auth/users`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: name }),
+      });
+      const data = await response.json();
+      if (response.ok) renderUserList(data.users || []);
+    });
+    item.append(label, remove);
+    list.appendChild(item);
+  }
+}
+
+function setUserDrawer(open) {
+  const drawer = document.getElementById("user-drawer");
+  if (!drawer) return;
+  if (open) {
+    drawer.hidden = false;
+    requestAnimationFrame(() => drawer.classList.add("is-open"));
+    return;
+  }
+  drawer.classList.remove("is-open");
+  window.setTimeout(() => {
+    if (!drawer.classList.contains("is-open")) drawer.hidden = true;
+  }, 320);
+}
+
+async function bootAdmin() {
+  const me = await authFetch(`${apiBase()}/api/auth/me`);
+  const session = await me.json();
+  if (!me.ok || session.role !== "admin") return;
+  const opener = document.getElementById("open-users");
+  const drawer = document.getElementById("user-drawer");
+  if (!opener || !drawer) return;
+  opener.hidden = false;
+  const response = await authFetch(`${apiBase()}/api/auth/users`);
+  const data = await response.json();
+  if (response.ok) renderUserList(data.users || []);
+  opener.addEventListener("click", () => setUserDrawer(true));
+  drawer.addEventListener("click", (event) => {
+    if (event.target.closest("[data-close-users]")) setUserDrawer(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setUserDrawer(false);
+  });
+  document.getElementById("add-user")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const note = document.getElementById("admin-note");
+    const response = await authFetch(`${apiBase()}/api/auth/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: form.username.value,
+        password: form.password.value,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      if (note) note.textContent = data.detail || "Could not add that user.";
+      return;
+    }
+    form.reset();
+    if (note) note.textContent = "User added.";
+    renderUserList(data.users || []);
+  });
+}
+
 async function bootCalculator() {
-  const response = await fetch(`${apiBase()}/api/cost/catalog`);
+  const session = await authFetch(`${apiBase()}/api/auth/me`);
+  if (!session.ok) return;
+  bootAdmin().catch(() => {});
+  const response = await authFetch(`${apiBase()}/api/cost/catalog`);
   const data = await response.json();
   if (!response.ok) throw new Error(data.detail || "Could not load vehicles.");
   catalogVehicles = data.vehicles || {};
